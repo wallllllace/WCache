@@ -7,20 +7,26 @@
 
 #import "CacheTool.h"
 #include "WMemoryCache.hpp"
+#include "WDiskCache.hpp"
 #import <Objc/runtime.h>
 //#include <cstring>
 #include <cstring>
 
 using namespace WMCache;
+using namespace WDCache;
 
 @implementation CacheTool{
     WMemoryCache * _memoryCache;
+    WDiskCache * _diskCache;
 }
 
 - (instancetype)init {
     self = [super init];
     if (self) {
         _memoryCache = new WMemoryCache(100, 5*1024*1024);
+        NSString *testPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+        NSString *rootPath = [testPath stringByAppendingPathComponent:@"WCachePrivate"];
+        _diskCache = new WDiskCache([rootPath UTF8String], [@"WcacheTable" UTF8String]);
     }
     return self;
 }
@@ -64,6 +70,7 @@ using namespace WMCache;
 
 - (void)dealloc {
     delete _memoryCache;
+    delete _diskCache;
 }
 
 @end

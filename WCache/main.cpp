@@ -11,8 +11,10 @@
 #include <iostream>
 #include <memory>
 #include "WMemoryCache.hpp"
+#include "WDiskCache.hpp"
 
 using namespace WMCache;
+using namespace WDCache;
 
 //void func1(WMemoryCache<int> *cache, const std::string key, std::shared_ptr<int> value) {
 //    std::cout << "func1的key：" << key << " ,func1的value：" << *value << std::endl;
