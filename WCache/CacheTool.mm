@@ -32,16 +32,18 @@ using namespace WMCache;
 
 - (nullable id)objectForKey:(NSString *)key {
     std::string keystr([key UTF8String]);
-    auto obj = _memoryCache->get(keystr);
-    if (obj == NULL) {
+    auto value = _memoryCache->get(keystr);
+    if (value == NULL) {
         return nil;
     }
-//    return (__bridge id)obj;
-    return (__bridge id)obj;
+    id object = [NSKeyedUnarchiver unarchiveObjectWithData:(__bridge NSData *)value];
+    free(value);
+    return object;
 }
 
 - (void)setObject:(nullable id)object forKey:(NSString *)key {
-    [self setObject:object forKey:key withCost:0];
+    NSData *value = [NSKeyedArchiver archivedDataWithRootObject:object];
+    [self setObject:value forKey:key withCost:value.length];
 }
 
 - (void)setObject:(nullable id)object forKey:(NSString *)key withCost:(NSUInteger)cost {
@@ -52,7 +54,7 @@ using namespace WMCache;
 
 - (void)removeObjectForKey:(NSString *)key {
     std::string keystr([key UTF8String]);
-//    CFBridgingRelease(_memoryCache->get(keystr));
+    CFBridgingRelease(_memoryCache->get(keystr));
     _memoryCache->removeObj(keystr);
 }
 

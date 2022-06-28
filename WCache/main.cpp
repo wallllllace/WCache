@@ -41,9 +41,9 @@ int main(int argc, const char * argv[]) {
     
     WMemoryCache *cache = new WMemoryCache(100, 3*1024*1024);
     Item *i1 = new Item(1);
-    cache->set(i1, std::to_string(1));
+    cache->set(i1, std::to_string(1), sizeof(*i1));
     Item *i2 = new Item(2);
-    cache->set(i2, std::to_string(2));
+    cache->set(i2, std::to_string(2), sizeof(*i2));
     Item *ii2 = static_cast<Item *>(cache->get(std::to_string(2)));
     std::cout << "ii2: " << ii2->value << std::endl;
     Item *ii1 = static_cast<Item *>(cache->get(std::to_string(1)));

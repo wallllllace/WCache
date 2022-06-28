@@ -20,7 +20,7 @@ void LinkedMap::insertNodeAtHead(std::shared_ptr<CacheNode> node) {
         bringNodeToHead(node);
         return;
     }
-    costLimit += node->_cost;
+    costLimit += node->_length;
     countLimit++;
     if (_head) {
         node->_next = _head;
@@ -53,7 +53,7 @@ void LinkedMap::removeNode(std::shared_ptr<CacheNode> node) {
         return;
     }
     _map.erase(node->_key);
-    costLimit -= node->_cost;
+    costLimit -= node->_length;
     countLimit--;
     if (node->_next) {
         node->_next->_last = node->_last;
@@ -94,11 +94,9 @@ void *WMemoryCache::get(const std::string key) {
         return NULL;
     }
     _lru->bringNodeToHead(p);
-    return p->_value;
-}
-
-void WMemoryCache::set(void *value, const std::string key) {
-    set(value, key, 0);
+    void *tmp = malloc(p->_length);
+    memcpy(tmp, p->_value, p->_length);
+    return tmp;
 }
 
 void WMemoryCache::set(void *value, const std::string key, size_t cost) {
