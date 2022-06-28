@@ -9,7 +9,7 @@
 
 namespace WMCache {
 
-void LinkedMap::insertNodeAtHead(CacheNode *node) {
+void LinkedMap::insertNodeAtHead(std::shared_ptr<CacheNode> node) {
     if (node == nullptr) {
         return;
     }
@@ -31,7 +31,7 @@ void LinkedMap::insertNodeAtHead(CacheNode *node) {
     }
 }
 
-void LinkedMap::bringNodeToHead(CacheNode *node) {
+void LinkedMap::bringNodeToHead(std::shared_ptr<CacheNode> node) {
     if (node == nullptr || _head == node) {
         return;
     }
@@ -48,7 +48,7 @@ void LinkedMap::bringNodeToHead(CacheNode *node) {
     _head = node;
 }
 
-void LinkedMap::removeNode(CacheNode *node) {
+void LinkedMap::removeNode(std::shared_ptr<CacheNode> node) {
     if (node == nullptr) {
         return;
     }
@@ -77,7 +77,7 @@ void LinkedMap::removeAll() {
     _map.clear();
 }
 
-CacheNode *WMemoryCache::_get(const std::string key) {
+std::shared_ptr<CacheNode> WMemoryCache::_get(const std::string key) {
     _mutex.lock();
     auto it = _lru->_map.find(key);
     _mutex.unlock();
@@ -107,13 +107,12 @@ void WMemoryCache::set(void *value, const std::string key, size_t cost) {
         return;
     }
     _mutex.lock();
-    auto node = new CacheNode(value, key, cost);
-    auto p = _lru->_map.insert({key, node});
-    if (!p.second) {
-        p.first->second = node;
-        _lru->bringNodeToHead(p.first->second);
-    } else {
+    auto node = std::make_shared<CacheNode>(value, key, cost);
+    auto it = _lru->_map.find(key);
+    if (it == _lru->_map.cend()) {
         _lru->insertNodeAtHead(node);
+    } else {
+        _lru->bringNodeToHead(it->second);
     }
     _mutex.unlock();
 }
@@ -129,23 +128,17 @@ bool WMemoryCache::contain(const std::string key) {
 }
 
 void WMemoryCache::removeObj(const std::string key) {
-    _mutex.lock();
     auto p = _get(key);
     if (p == nullptr) {
         return;
     }
+    _mutex.lock();
     _lru->removeNode(p);
-    delete p;
-    p = NULL;
     _mutex.unlock();
 }
 
 void WMemoryCache::removeAllObj() {
     _mutex.lock();
-    for (auto &p : _lru->_map) {
-        delete p.second;
-        p.second = NULL;
-    }
     _lru->removeAll();
     _mutex.unlock();
 }

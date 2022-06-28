@@ -28,24 +28,24 @@ public:
     const std::string _key;
     unsigned long long _cost;
     unsigned long long _timestamp;
-    CacheNode *_last;
-    CacheNode *_next;
+    std::shared_ptr<CacheNode> _last;
+    std::shared_ptr<CacheNode> _next;
 };
 
 
 class LinkedMap {
 public:
-    std::unordered_map<std::string, CacheNode *> _map;
+    std::unordered_map<std::string, std::shared_ptr<CacheNode>> _map;
     
     LinkedMap(size_t count, size_t cost): countLimit(count), costLimit(cost) {}
-    void insertNodeAtHead(CacheNode *node);
-    void bringNodeToHead(CacheNode *node);
-    void removeNode(CacheNode *node);
+    void insertNodeAtHead(std::shared_ptr<CacheNode>node);
+    void bringNodeToHead(std::shared_ptr<CacheNode>node);
+    void removeNode(std::shared_ptr<CacheNode>node);
     void removeAll();
     
 private:
-    CacheNode * _head;
-    CacheNode * _tail;
+    std::shared_ptr<CacheNode> _head;
+    std::shared_ptr<CacheNode> _tail;
     size_t countLimit;
     size_t costLimit;
 };
@@ -65,7 +65,7 @@ public:
 private:
     std::shared_ptr<LinkedMap> _lru;
     std::mutex _mutex;
-    CacheNode *_get(const std::string key);
+    std::shared_ptr<CacheNode>_get(const std::string key);
 };
 
 };

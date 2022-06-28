@@ -36,23 +36,23 @@ using namespace WMCache;
     if (obj == NULL) {
         return nil;
     }
-    return (__bridge_transfer id)obj;
+//    return (__bridge id)obj;
+    return (__bridge id)obj;
 }
 
 - (void)setObject:(nullable id)object forKey:(NSString *)key {
-    std::string keystr([key UTF8String]);
-    void *obj = (__bridge_retained void*)object;
-    _memoryCache->set(obj, keystr);
+    [self setObject:object forKey:key withCost:0];
 }
 
 - (void)setObject:(nullable id)object forKey:(NSString *)key withCost:(NSUInteger)cost {
     std::string keystr([key UTF8String]);
-    void *obj = (__bridge_retained void*)object;
+    void *obj = (__bridge_retained void *)object;
     _memoryCache->set(obj, keystr, cost);
 }
 
 - (void)removeObjectForKey:(NSString *)key {
     std::string keystr([key UTF8String]);
+//    CFBridgingRelease(_memoryCache->get(keystr));
     _memoryCache->removeObj(keystr);
 }
 
