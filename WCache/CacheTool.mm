@@ -6,56 +6,62 @@
 //
 
 #import "CacheTool.h"
-#include "WMemoryCache.cpp"
+#include "WMemoryCache.hpp"
 #import <Objc/runtime.h>
 //#include <cstring>
 #include <cstring>
 
+using namespace WMCache;
+
 @implementation CacheTool{
-    WMemoryCache<void *> * _memoryCache;
+    WMemoryCache * _memoryCache;
 }
 
 - (instancetype)init {
     self = [super init];
     if (self) {
-        _memoryCache = new WMemoryCache<void *>(100, 5*1024*1024);
+        _memoryCache = new WMemoryCache(100, 5*1024*1024);
     }
     return self;
 }
-
+//
 - (BOOL)containsObjectForKey:(NSString *)key {
-    std::string *keystr = new std::string([key UTF8String]);
-    return _memoryCache->contain(*keystr);
+    std::string keystr([key UTF8String]);
+    return _memoryCache->contain(keystr);
 }
 
 - (nullable id)objectForKey:(NSString *)key {
-    std::string *keystr = new std::string([key UTF8String]);
-    auto obj = _memoryCache->get(*keystr);
-    if (obj == nullptr) {
+    std::string keystr([key UTF8String]);
+    auto obj = _memoryCache->get(keystr);
+    if (obj == NULL) {
         return nil;
     }
-    return (__bridge id)*obj;
+    return (__bridge_transfer id)obj;
 }
 
 - (void)setObject:(nullable id)object forKey:(NSString *)key {
-    std::string *keystr = new std::string([key UTF8String]);
+    std::string keystr([key UTF8String]);
     void *obj = (__bridge_retained void*)object;
-    _memoryCache->set(std::make_shared<void*>(obj), *keystr);
+    _memoryCache->set(obj, keystr);
 }
 
 - (void)setObject:(nullable id)object forKey:(NSString *)key withCost:(NSUInteger)cost {
-    std::string *keystr = new std::string([key UTF8String]);
+    std::string keystr([key UTF8String]);
     void *obj = (__bridge_retained void*)object;
-    _memoryCache->set(std::make_shared<void*>(obj), *keystr, cost);
+    _memoryCache->set(obj, keystr, cost);
 }
 
 - (void)removeObjectForKey:(NSString *)key {
-    std::string *keystr = new std::string([key UTF8String]);
-    _memoryCache->removeObj(*keystr);
+    std::string keystr([key UTF8String]);
+    _memoryCache->removeObj(keystr);
 }
 
 - (void)removeAllObjects {
     _memoryCache->removeAllObj();
+}
+
+- (void)dealloc {
+    delete _memoryCache;
 }
 
 @end
