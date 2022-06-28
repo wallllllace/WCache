@@ -12,6 +12,7 @@
 		EFB71B2628669B9D0049FCE4 /* WCache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EFB71B2428669B9D0049FCE4 /* WCache.cpp */; };
 		EFB71B2928669BAB0049FCE4 /* WMemoryCache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EFB71B2728669BAB0049FCE4 /* WMemoryCache.cpp */; };
 		EFB71B2C28669BBA0049FCE4 /* WDiskCache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EFB71B2A28669BBA0049FCE4 /* WDiskCache.cpp */; };
+		EFD30BC5286B230F00BBC45C /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = EFD30BC4286B230F00BBC45C /* libsqlite3.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -37,6 +38,7 @@
 		EFB71B2828669BAB0049FCE4 /* WMemoryCache.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WMemoryCache.hpp; sourceTree = "<group>"; };
 		EFB71B2A28669BBA0049FCE4 /* WDiskCache.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = WDiskCache.cpp; sourceTree = "<group>"; };
 		EFB71B2B28669BBA0049FCE4 /* WDiskCache.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WDiskCache.hpp; sourceTree = "<group>"; };
+		EFD30BC4286B230F00BBC45C /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -44,6 +46,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EFD30BC5286B230F00BBC45C /* libsqlite3.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -55,6 +58,7 @@
 			children = (
 				EFB71B1B28669B5B0049FCE4 /* WCache */,
 				EFB71B1A28669B5B0049FCE4 /* Products */,
+				EFD30BC3286B230F00BBC45C /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -80,6 +84,14 @@
 				EFB71B2B28669BBA0049FCE4 /* WDiskCache.hpp */,
 			);
 			path = WCache;
+			sourceTree = "<group>";
+		};
+		EFD30BC3286B230F00BBC45C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				EFD30BC4286B230F00BBC45C /* libsqlite3.tbd */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
