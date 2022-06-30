@@ -14,6 +14,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable id)objectForKey:(NSString *)key ;
 
+- (nullable id)objectFromDiskForKey:(NSString *)key;
+
 - (void)setObject:(nullable id)object forKey:(NSString *)key ;
 
 - (void)setObject:(nullable id)object forKey:(NSString *)key withCost:(NSUInteger)cost ;

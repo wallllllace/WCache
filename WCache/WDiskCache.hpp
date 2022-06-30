@@ -20,6 +20,8 @@ class WDiskCache {
 public:
     WDiskCache(const char *rootPath, const char *tableName);
     
+    void set(const void *value, const std::string key, size_t cost);
+    std::pair<const void *, int> get(const std::string key);
 private:
     const char * _rootPath;
     const char * _tableName;

@@ -47,6 +47,20 @@ using namespace WDCache;
     return object;
 }
 
+- (nullable id)objectFromDiskForKey:(NSString *)key {
+    std::string keystr([key UTF8String]);
+    auto value = _diskCache->get(keystr);
+    if (value.second == 0) {
+        return nil;
+    }
+    NSData *data = [NSData dataWithBytes:value.first length:value.second];
+//    id object = [NSKeyedUnarchiver unarchiveObjectWithData:(__bridge NSData *)value.first];
+    NSError *err;
+//    NSData *data = (__bridge NSData *)value.first;
+    id object = [NSKeyedUnarchiver unarchiveTopLevelObjectWithData:data error:&err];
+    return object;
+}
+
 - (void)setObject:(nullable id)object forKey:(NSString *)key {
     NSData *value = [NSKeyedArchiver archivedDataWithRootObject:object];
     [self setObject:value forKey:key withCost:value.length];
@@ -56,6 +70,7 @@ using namespace WDCache;
     std::string keystr([key UTF8String]);
     void *obj = (__bridge_retained void *)object;
     _memoryCache->set(obj, keystr, cost);
+    _diskCache->set(((NSData *)object).bytes, keystr, ((NSData *)object).length);
 }
 
 - (void)removeObjectForKey:(NSString *)key {
