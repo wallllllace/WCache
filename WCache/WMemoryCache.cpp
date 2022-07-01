@@ -88,18 +88,19 @@ std::shared_ptr<CacheNode> WMemoryCache::_get(const std::string key) {
     return it->second;
 }
 
-void *WMemoryCache::get(const std::string key) {
+std::pair<const void *, int>WMemoryCache::get(const std::string key) {
     auto p = _get(key);
     if (p == nullptr) {
-        return NULL;
+        return {NULL, 0};
     }
     _lru->bringNodeToHead(p);
-    void *tmp = malloc(p->_length);
-    memcpy(tmp, p->_value, p->_length);
-    return tmp;
+//    void *tmp = malloc(p->_length);
+//    memcpy(tmp, p->_value, p->_length);
+//    return {tmp, p->_length};
+    return {p->_value, p->_length};
 }
 
-void WMemoryCache::set(void *value, const std::string key, size_t cost) {
+void WMemoryCache::set(const void *value, const std::string key, size_t cost) {
     if (value == nullptr) {
         removeObj(key);
         return;
@@ -110,6 +111,7 @@ void WMemoryCache::set(void *value, const std::string key, size_t cost) {
     if (it == _lru->_map.cend()) {
         _lru->insertNodeAtHead(node);
     } else {
+        it->second->updateNode(value, cost);
         _lru->bringNodeToHead(it->second);
     }
     _mutex.unlock();

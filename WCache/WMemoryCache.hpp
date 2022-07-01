@@ -19,22 +19,32 @@ namespace WMCache {
 
 class CacheNode {
 public:
-    CacheNode(void *value, const std::string key, unsigned long long length): _value(value), _key(key), _length(length) {
-        _value = malloc(length);
+    CacheNode(const void *value, const std::string key, unsigned long long length): _value(malloc(length)), _key(key), _length(length) {
         memcpy(_value, value, length);
         _timestamp = (unsigned long long)time(NULL);
         _last = nullptr;
         _next = nullptr;
     }
+    
     ~CacheNode() {
         free(_value);
     }
+    
+    void updateNode(const void *value, unsigned long long length){
+        free(_value);
+        _value = malloc(length);
+        memcpy(_value, value, length);
+        _length = length;
+        _timestamp = (unsigned long long)time(NULL);
+    }
+    
     void * _value;
     size_t _length;
     const std::string _key;
     unsigned long long _timestamp;
     std::shared_ptr<CacheNode> _last;
     std::shared_ptr<CacheNode> _next;
+    
 };
 
 
@@ -60,8 +70,8 @@ class WMemoryCache {
 public:
     WMemoryCache(size_t count = 100, size_t cost = 10 * 1024 * 1024): _lru(std::make_shared<LinkedMap>(LinkedMap(count, cost))) {};
     
-    void *get(const std::string key);
-    void set(void *value, const std::string key, size_t cost);
+    std::pair<const void *, int> get(const std::string key);
+    void set(const void *value, const std::string key, size_t cost);
     bool contain(const std::string key);
     void removeObj(const std::string key);
     void removeAllObj();

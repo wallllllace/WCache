@@ -22,6 +22,11 @@ public:
     
     void set(const void *value, const std::string key, size_t cost);
     std::pair<const void *, int> get(const std::string key);
+    bool contain(const std::string key);
+    void removeObj(const std::string key);
+    void removeObjs(std::vector<std::string>& keys);
+    void removeAllObj();
+
 private:
     const char * _rootPath;
     const char * _tableName;

@@ -7,7 +7,8 @@
 
 #include "WDiskCache.hpp"
 #include <iostream>
-
+#include <vector>
+#include <string>
 
 namespace WDCache {
 
@@ -27,7 +28,7 @@ sqlite3_stmt * _dbPrepareStmt(sqlite3 *db, const char *sql) {
 }
 
 bool _db_save(sqlite3 *db, const char * key, const void * value, size_t size) {
-    const char * sql = "insert or replace into t_WDiskCache (value, key, size, modification_time, last_access_time) values (?1, ?2, ?3, ?4, ?5);";
+    const char * sql = "insert into t_WDiskCache (value, key, size, modification_time, last_access_time) values (?1, ?2, ?3, ?4, ?5);";
     sqlite3_stmt *stmt = _dbPrepareStmt(db, sql);
     if (!stmt) {
         return false;
@@ -40,11 +41,79 @@ bool _db_save(sqlite3 *db, const char * key, const void * value, size_t size) {
     sqlite3_bind_int(stmt, 5, timestamp);
     int result = sqlite3_step(stmt);
     if (result != SQLITE_DONE) {
-        std::cout << "sqlite stmt prepare error" << std::endl;
+        std::cout << "sqlite stmt save error" << std::endl;
         return false;
     }
     return true;
 }
+
+bool _db_update(sqlite3 *db, const char * key, const void * value, size_t size) {
+    const char * sql = "update t_WDiskCache set value = ?1, size = ?2, modification_time = ?3, last_access_time = ?4 where key = ?5;";
+    sqlite3_stmt *stmt = _dbPrepareStmt(db, sql);
+    if (!stmt) {
+        return false;
+    }
+    int timestamp = (int)time(NULL);
+    sqlite3_bind_blob(stmt, 1, value, (int)size, 0);
+    sqlite3_bind_int(stmt, 2, (int)size);
+    sqlite3_bind_int(stmt, 3, timestamp);
+    sqlite3_bind_int(stmt, 4, timestamp);
+    sqlite3_bind_text(stmt, 5, key, -1, NULL);
+    int result = sqlite3_step(stmt);
+    if (result != SQLITE_DONE) {
+        std::cout << "sqlite stmt update error" << std::endl;
+        return false;
+    }
+    return true;
+    return false;
+}
+
+bool _db_delete(sqlite3 *db, const char * key) {
+    const char *sql = "delete from t_WDiskCache where key = ?1;";
+    sqlite3_stmt *stmt = _dbPrepareStmt(db, sql);
+    if (!stmt) {
+        return false;
+    }
+    sqlite3_bind_text(stmt, 1, key, -1, NULL);
+    int result = sqlite3_step(stmt);
+    if (result != SQLITE_DONE) {
+        std::cout << " db delete error" << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool _db_deleteItems(sqlite3 *db, std::vector<std::string> &keys) {
+    if (keys.size() == 0) {
+        return false;
+    }
+    std::string s("");
+    for (decltype(keys.size()) i = 0, max = keys.size(); i < max; ++i) {
+        s += "?";
+        s += std::to_string(i+1);
+        if (i + 1 != max) {
+            s += ",";
+        }
+    }
+    std::string sql = "delete from t_WDiskCache where key in (";
+    sql += s + ");";
+    sqlite3_stmt *stmt = _dbPrepareStmt(db, sql.c_str());
+    if (!stmt) {
+        return false;
+    }
+    for (decltype(keys.size()) i = 0, max = keys.size(); i < max; ++i){
+        auto key = keys[i];
+        sqlite3_bind_text(stmt, (int)i + 1, key.c_str(), -1, NULL);
+    }
+    int result = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+    if (result == SQLITE_ERROR) {
+        std::cout << "sqlite delete items error" << std::endl;
+        return false;
+    }
+    return true;
+}
+
 
 std::pair<const void *, int>_db_get(sqlite3 *db, const char *key) {
     const char *sql = "select value from t_WDiskCache where key = ?1;";
@@ -86,27 +155,36 @@ void _db_getItem(sqlite3 *db, const char *key) {
     }
 }
 
+unsigned int _db_getCount(sqlite3 *db, const char *key){
+    const char *sql = "select count(key) from t_WDiskCache where key = ?1;";
+    sqlite3_stmt *stmt = _dbPrepareStmt(db, sql);
+    if (!stmt) {
+        return -1;
+    }
+    sqlite3_bind_text(stmt, 1, key, -1, NULL);
+    int result = sqlite3_step(stmt);
+    if (result != SQLITE_ROW) {
+        std::cout << "sqlite query error" << std::endl;
+        return -1;
+    }
+    return sqlite3_column_int(stmt, 0);
+}
 
+unsigned int _db_getTotal(sqlite3 *db, const char *key){
+    const char *sql = "select sum(size) from t_WDiskCache where key = ?1;";
+    sqlite3_stmt *stmt = _dbPrepareStmt(db, sql);
+    if (!stmt) {
+        return -1;
+    }
+    sqlite3_bind_text(stmt, 1, key, -1, NULL);
+    int result = sqlite3_step(stmt);
+    if (result != SQLITE_ROW) {
+        std::cout << "sqlite query error" << std::endl;
+        return -1;
+    }
+    return sqlite3_column_int(stmt, 0);
+}
 
-//void _exec(sqlite3 *db, const char * sql) {
-//    const char *sqlSentence = "INSERT INTO t_person(name, age) VALUES('夏明', 22); ";        //SQL语句
-//        sqlite3_stmt *stmt = NULL;        //stmt语句句柄
-//
-//        //进行插入前的准备工作——检查语句合法性
-//        //-1代表系统会自动计算SQL语句的长度
-//        int result = sqlite3_prepare(sql, sqlSentence, -1, &stmt, NULL);
-//
-//        if (result == SQLITE_OK) {
-//            std::clog<< "添加数据语句OK";
-//            //执行该语句
-//            sqlite3_step(stmt);
-//        }
-//        else {
-//            std::clog << "添加数据语句有问题";
-//        }
-//        //清理语句句柄，准备执行下一个语句
-//        sqlite3_finalize(stmt);
-//}
 
 WDiskCache::WDiskCache(const char *rootPath, const char *tableName): _rootPath(rootPath), _tableName(tableName) {
     if (!_db) {
@@ -127,7 +205,17 @@ WDiskCache::WDiskCache(const char *rootPath, const char *tableName): _rootPath(r
     }
 };
 
+// 增、改
 void WDiskCache::set(const void *value, const std::string key, size_t cost) {
+    if (contain(key)) {
+        bool result = _db_update(_db, key.c_str(), value, cost);
+        if (result) {
+            std::cout << "更新成功，key:" << key << std::endl;
+        } else {
+            std::cout << "更新失败，key:" << key << std::endl;
+        }
+        return;
+    }
     bool result = _db_save(_db, key.c_str(), value, cost);
     if (result) {
         std::cout << "插入成功，key:" << key << std::endl;
@@ -136,10 +224,45 @@ void WDiskCache::set(const void *value, const std::string key, size_t cost) {
     }
 }
 
-
+// 查
 std::pair<const void *, int> WDiskCache::get(const std::string key) {
     return _db_get(_db, key.c_str());
 }
+
+bool WDiskCache::contain(const std::string key) {
+    unsigned int result = _db_getCount(_db, key.c_str());
+    if (result == -1) {
+        std::cout << "查询数量失败，key:" << key << std::endl;
+        return false;
+    } else if(result > 0) {
+        return true;
+    }
+    return false;
+}
+
+void WDiskCache::removeObj(const std::string key) {
+    bool result = _db_delete(_db, key.c_str());
+    if (result) {
+        std::cout << "删除成功，key:" << key << std::endl;
+    } else {
+        std::cout << "删除失败，key:" << key << std::endl;
+    }
+}
+
+void WDiskCache::removeObjs(std::vector<std::string> &keys) {
+    bool result = _db_deleteItems(_db, keys);
+    if (result) {
+        std::cout << "批量删除成功" << std::endl;
+    } else {
+        std::cout << "批量删除失败" << std::endl;
+    }
+}
+
+void WDiskCache::removeAllObj() {
+    
+}
+// 删
+// 批量删
 
 };
 

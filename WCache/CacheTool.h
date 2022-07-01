@@ -22,6 +22,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)removeObjectForKey:(NSString *)key ;
 
+- (void)removeObjectForKeys:(NSArray<NSString *> *)keys;
+
 - (void)removeAllObjects ;
 @end
 
