@@ -25,10 +25,34 @@ using namespace WDCache;
 - (instancetype)init {
     self = [super init];
     if (self) {
-        _memoryCache = new WMemoryCache(100, 5*1024*1024);
+        _memoryCache = new WMemoryCache(2, 5*1024*1024);
         NSString *testPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
         NSString *rootPath = [testPath stringByAppendingPathComponent:@"WCachePrivate"];
         _diskCache = new WDiskCache([rootPath UTF8String], [@"WcacheTable" UTF8String]);
+        
+        
+        /*
+//        std::string *s = new std::string("aaa");
+        char *s = (char *)malloc(sizeof(char) * 3);
+        const char *c_s = "aaa";
+        memcpy(s, c_s, sizeof(char) * 3);
+        NSString *s_objc = [[NSString alloc] initWithUTF8String:s];
+        NSHashTable *hashTable = [NSHashTable weakObjectsHashTable];
+        [hashTable addObject:s_objc];
+        if ([hashTable containsObject:s_objc]) {
+            NSLog(@"存在，s_objc：%@",s_objc);
+            std::cout << "存在，s:" << *s << std::endl;
+        } else {
+            NSLog(@"不存在");
+        }
+        free(s);
+        if ([hashTable containsObject:s_objc]) {
+            NSLog(@"存在，s_objc：%@",s_objc);
+            std::cout << "存在，s:" << s << std::endl;
+        } else {
+            NSLog(@"不存在");
+        }
+         */
     }
     return self;
 }

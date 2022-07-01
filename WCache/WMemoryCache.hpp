@@ -51,24 +51,23 @@ public:
 class LinkedMap {
 public:
     std::unordered_map<std::string, std::shared_ptr<CacheNode>> _map;
-    
-    LinkedMap(size_t count, size_t cost): countLimit(count), costLimit(cost) {}
     void insertNodeAtHead(std::shared_ptr<CacheNode>node);
     void bringNodeToHead(std::shared_ptr<CacheNode>node);
     void removeNode(std::shared_ptr<CacheNode>node);
+    std::shared_ptr<CacheNode> removeTailNode();
     void removeAll();
     
 private:
     std::shared_ptr<CacheNode> _head;
     std::shared_ptr<CacheNode> _tail;
-    size_t countLimit;
-    size_t costLimit;
+    
 };
 
 class WMemoryCache {
     
 public:
-    WMemoryCache(size_t count = 100, size_t cost = 10 * 1024 * 1024): _lru(std::make_shared<LinkedMap>(LinkedMap(count, cost))) {};
+    WMemoryCache(size_t count, size_t cost):
+    _lru(std::make_shared<LinkedMap>()), countLimit(count), costLimit(cost), countCur(0), costCur(0) {};
     
     std::pair<const void *, int> get(const std::string key);
     void set(const void *value, const std::string key, size_t cost);
@@ -78,8 +77,15 @@ public:
     
 private:
     std::shared_ptr<LinkedMap> _lru;
+    const size_t countLimit;
+    const size_t costLimit;
+    size_t countCur;
+    size_t costCur;
     std::mutex _mutex;
+    
     std::shared_ptr<CacheNode>_get(const std::string key);
+    void _trimToFitCost();
+    void _trimToFitCount();
 };
 
 };

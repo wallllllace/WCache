@@ -16,12 +16,9 @@ void LinkedMap::insertNodeAtHead(std::shared_ptr<CacheNode> node) {
     auto p = _map.insert({node->_key, node});
     if (!p.second) {
         p.first->second = node;
-        // TODO 更新coast
         bringNodeToHead(node);
         return;
     }
-    costLimit += node->_length;
-    countLimit++;
     if (_head) {
         node->_next = _head;
         _head->_last = node;
@@ -53,8 +50,6 @@ void LinkedMap::removeNode(std::shared_ptr<CacheNode> node) {
         return;
     }
     _map.erase(node->_key);
-    costLimit -= node->_length;
-    countLimit--;
     if (node->_next) {
         node->_next->_last = node->_last;
     }
@@ -69,9 +64,16 @@ void LinkedMap::removeNode(std::shared_ptr<CacheNode> node) {
     }
 }
 
+std::shared_ptr<CacheNode> LinkedMap::removeTailNode() {
+    if (_tail == nullptr) {
+        return nullptr;
+    }
+    auto p = _tail;
+    removeNode(p);
+    return p;
+}
+
 void LinkedMap::removeAll() {
-    costLimit = 0;
-    countLimit = 0;
     _head = nullptr;
     _tail = nullptr;
     _map.clear();
@@ -94,27 +96,38 @@ std::pair<const void *, int>WMemoryCache::get(const std::string key) {
         return {NULL, 0};
     }
     _lru->bringNodeToHead(p);
-//    void *tmp = malloc(p->_length);
-//    memcpy(tmp, p->_value, p->_length);
-//    return {tmp, p->_length};
     return {p->_value, p->_length};
 }
 
 void WMemoryCache::set(const void *value, const std::string key, size_t cost) {
-    if (value == nullptr) {
+    if (value == NULL) {
         removeObj(key);
         return;
     }
     _mutex.lock();
-    auto node = std::make_shared<CacheNode>(value, key, cost);
     auto it = _lru->_map.find(key);
     if (it == _lru->_map.cend()) {
+        auto node = std::make_shared<CacheNode>(value, key, cost);
         _lru->insertNodeAtHead(node);
+        ++countCur;
+        costCur += cost;
     } else {
+        size_t oldLen = it->second->_length;
         it->second->updateNode(value, cost);
         _lru->bringNodeToHead(it->second);
+        costCur += cost - oldLen;
+        if (costCur < 0) {
+            costCur = 0;
+        }
     }
     _mutex.unlock();
+    if (countCur > countLimit) {
+        _trimToFitCount();
+    }
+    if (costCur > costLimit) {
+        _trimToFitCost();
+    }
+    
 }
 
 bool WMemoryCache::contain(const std::string key) {
@@ -134,13 +147,45 @@ void WMemoryCache::removeObj(const std::string key) {
     }
     _mutex.lock();
     _lru->removeNode(p);
+    --countCur;
+    costCur -= p->_length;
     _mutex.unlock();
 }
 
 void WMemoryCache::removeAllObj() {
     _mutex.lock();
     _lru->removeAll();
+    countCur = 0;
+    costCur = 0;
     _mutex.unlock();
 }
+
+
+void WMemoryCache::_trimToFitCost() {
+    if (costCur <= costLimit) {
+        return;
+    }
+    while (costCur > costLimit) {
+        _mutex.lock();
+        auto node = _lru->removeTailNode();
+        --countCur;
+        costCur -= node->_length;
+        _mutex.unlock();
+    }
+}
+
+void WMemoryCache::_trimToFitCount() {
+    if (countCur <= countLimit) {
+        return;
+    }
+    while (countCur > countLimit) {
+        _mutex.lock();
+        auto node = _lru->removeTailNode();
+        --countCur;
+        costCur -= node->_length;
+        _mutex.unlock();
+    }
+}
+
 
 };
