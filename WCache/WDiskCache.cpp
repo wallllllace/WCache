@@ -63,11 +63,27 @@ bool _db_update(sqlite3 *db, const char * key, const void * value, size_t size) 
     sqlite3_bind_text(stmt, 5, key, -1, NULL);
     int result = sqlite3_step(stmt);
     if (result != SQLITE_DONE) {
-        std::cout << "sqlite stmt update error" << std::endl;
+        std::cout << "sqlite update error" << std::endl;
         return false;
     }
     return true;
-    return false;
+}
+
+bool _db_updateAccessTime(sqlite3 *db, const char *key) {
+    const char *sql = "update t_WDiskCache set last_access_time = ?1 where key = ?2;";
+    sqlite3_stmt *stmt = _dbPrepareStmt(db, sql);
+    if (!stmt) {
+        return false;
+    }
+    int timestamp = (int)time(NULL);
+    sqlite3_bind_int(stmt, 1, timestamp);
+    sqlite3_bind_text(stmt, 2, key, -1, NULL);
+    int result = sqlite3_step(stmt);
+    if (result != SQLITE_DONE) {
+        std::cout << "sqlite update last_access_time error" << std::endl;
+        return false;
+    }
+    return true;
 }
 
 bool _db_delete(sqlite3 *db, const char * key) {
@@ -231,7 +247,10 @@ std::pair<const void *, int> WDiskCache::get(const std::string key) {
     if (!_db_open()) {
         return {NULL, -1};
     }
-    return _db_get(_db, key.c_str());
+    const char *k = key.c_str();
+    auto p = _db_get(_db, k);
+    _db_updateAccessTime(_db, k);
+    return p;
 }
 
 bool WDiskCache::contain(const std::string key) {

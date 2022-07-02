@@ -62,10 +62,6 @@ using namespace WDCache;
         return nil;
     }
     NSData *data = [NSData dataWithBytes:value.first length:value.second];
-//    id object = [NSKeyedUnarchiver unarchiveObjectWithData:(__bridge NSData *)value.first];
-    NSError *err;
-//    NSData *data = (__bridge NSData *)value.first;
-//    id object = [NSKeyedUnarchiver unarchiveTopLevelObjectWithData:data error:&err];
     id object = [NSKeyedUnarchiver unarchiveObjectWithData:data];
     return object;
 }
