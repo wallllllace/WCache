@@ -13,6 +13,7 @@
 #include <cstring>
 #include <vector>
 #include <string>
+#include <iostream>
 
 using namespace WMCache;
 using namespace WDCache;
@@ -28,31 +29,12 @@ using namespace WDCache;
         _memoryCache = new WMemoryCache(2, 5*1024*1024);
         NSString *testPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
         NSString *rootPath = [testPath stringByAppendingPathComponent:@"WCachePrivate"];
-        _diskCache = new WDiskCache([rootPath UTF8String], [@"WcacheTable" UTF8String]);
-        
-        
-        /*
-//        std::string *s = new std::string("aaa");
-        char *s = (char *)malloc(sizeof(char) * 3);
-        const char *c_s = "aaa";
-        memcpy(s, c_s, sizeof(char) * 3);
-        NSString *s_objc = [[NSString alloc] initWithUTF8String:s];
-        NSHashTable *hashTable = [NSHashTable weakObjectsHashTable];
-        [hashTable addObject:s_objc];
-        if ([hashTable containsObject:s_objc]) {
-            NSLog(@"存在，s_objc：%@",s_objc);
-            std::cout << "存在，s:" << *s << std::endl;
-        } else {
-            NSLog(@"不存在");
+        try {
+            _diskCache = new WDiskCache([rootPath UTF8String], [@"WcacheTable" UTF8String]);
+        } catch (const char *msg) {
+            std::cout << "exception: " << msg << std::endl;
         }
-        free(s);
-        if ([hashTable containsObject:s_objc]) {
-            NSLog(@"存在，s_objc：%@",s_objc);
-            std::cout << "存在，s:" << s << std::endl;
-        } else {
-            NSLog(@"不存在");
-        }
-         */
+        
     }
     return self;
 }
@@ -65,7 +47,7 @@ using namespace WDCache;
 - (nullable id)objectForKey:(NSString *)key {
     std::string keystr([key UTF8String]);
     auto value = _memoryCache->get(keystr);
-    if (value.second == 0) {
+    if (value.second <= 0) {
         return nil;
     }
     NSData *data = [NSData dataWithBytes:value.first length:value.second];
@@ -76,7 +58,7 @@ using namespace WDCache;
 - (nullable id)objectFromDiskForKey:(NSString *)key {
     std::string keystr([key UTF8String]);
     auto value = _diskCache->get(keystr);
-    if (value.second == 0) {
+    if (value.second <= 0) {
         return nil;
     }
     NSData *data = [NSData dataWithBytes:value.first length:value.second];
@@ -117,6 +99,7 @@ using namespace WDCache;
 
 - (void)removeAllObjects {
     _memoryCache->removeAllObj();
+    _diskCache->removeAllObj();
 }
 
 - (void)dealloc {

@@ -13,12 +13,18 @@
 #include <sqlite3.h>
 #include <iostream>
 
+#define ROOTPATHLEN 500
+#define TABLENAMELEN 100
+
 namespace WDCache {
 
 class WDiskCache {
     
 public:
     WDiskCache(const char *rootPath, const char *tableName);
+    ~WDiskCache(){
+        _db_close();
+    }
     
     void set(const void *value, const std::string key, size_t cost);
     std::pair<const void *, int> get(const std::string key);
@@ -28,9 +34,12 @@ public:
     void removeAllObj();
 
 private:
-    const char * _rootPath;
-    const char * _tableName;
+    char _rootPath[ROOTPATHLEN];
+    char _tableName[TABLENAMELEN];
     sqlite3 *_db = NULL;
+    
+    bool _db_open();
+    void _db_close();
 };
 
 };
