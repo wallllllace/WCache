@@ -10,11 +10,9 @@
 #include <string>
 #include <iostream>
 #include <memory>
-#include "WMemoryCache.hpp"
-#include "WDiskCache.hpp"
+#include "WCache.hpp"
 
-using namespace WMCache;
-using namespace WDCache;
+using namespace WCache;
 
 //void func1(WMemoryCache<int> *cache, const std::string key, std::shared_ptr<int> value) {
 //    std::cout << "func1的key：" << key << " ,func1的value：" << *value << std::endl;
@@ -41,15 +39,15 @@ int main(int argc, const char * argv[]) {
     // insert code here...
     std::cout << "Hello, World!\n";
     
-    WMemoryCache *cache = new WMemoryCache(100, 3*1024*1024);
-    Item *i1 = new Item(1);
-    cache->set(i1, std::to_string(1), sizeof(*i1));
-    Item *i2 = new Item(2);
-    cache->set(i2, std::to_string(2), sizeof(*i2));
-    Item *ii2 = static_cast<Item *>(cache->get(std::to_string(2)));
-    std::cout << "ii2: " << ii2->value << std::endl;
-    Item *ii1 = static_cast<Item *>(cache->get(std::to_string(1)));
-    std::cout << "ii1: " << ii1->value << std::endl;
+//    WCache *cache = new WMemoryCache(100, 3*1024*1024);
+//    Item *i1 = new Item(1);
+//    cache->set(i1, std::to_string(1), sizeof(*i1));
+//    Item *i2 = new Item(2);
+//    cache->set(i2, std::to_string(2), sizeof(*i2));
+//    Item *ii2 = static_cast<Item *>(cache->get(std::to_string(2)));
+//    std::cout << "ii2: " << ii2->value << std::endl;
+//    Item *ii1 = static_cast<Item *>(cache->get(std::to_string(1)));
+//    std::cout << "ii1: " << ii1->value << std::endl;
 //
 //    std::thread ths[1000];
 //    for (int i = 0; i<1000; ++i) {
@@ -79,8 +77,8 @@ int main(int argc, const char * argv[]) {
 ////        std::cout << *j << std::endl;
 ////    }
 //    std::cout << "主线程执行结束..." << std::endl;
-    delete i1;
-    delete i2;
-    delete cache;
+//    delete i1;
+//    delete i2;
+//    delete cache;
     return 0;
 }

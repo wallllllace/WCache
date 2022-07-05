@@ -10,21 +10,19 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface CacheTool : NSObject
+
+- (instancetype)initWithPath:(NSString *)path cacheName:(NSString *)cacheName;
+
 - (BOOL)containsObjectForKey:(NSString *)key ;
 
 - (nullable id)objectForKey:(NSString *)key ;
 
-- (nullable id)objectFromDiskForKey:(NSString *)key;
-
 - (void)setObject:(nullable id)object forKey:(NSString *)key ;
-
-- (void)setObject:(nullable id)object forKey:(NSString *)key withCost:(NSUInteger)cost ;
 
 - (void)removeObjectForKey:(NSString *)key ;
 
-- (void)removeObjectForKeys:(NSArray<NSString *> *)keys;
-
 - (void)removeAllObjects ;
+
 @end
 
 NS_ASSUME_NONNULL_END
