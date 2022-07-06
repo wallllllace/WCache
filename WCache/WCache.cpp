@@ -230,7 +230,6 @@ void WMemoryCache::_trimToFitCount() {
     }
 }
 
-
 sqlite3_stmt * _dbPrepareStmt(sqlite3 *db, const char *sql) {
     if (!sql) {
         return NULL;
@@ -494,7 +493,9 @@ void WDiskCache::set(const void *value, const std::string& key, size_t cost) {
         return;
     }
     if (contain(key)) {
+        _mutex.lock();
         bool result = _db_update(_db, key.c_str(), value, cost);
+        _mutex.unlock();
         if (result) {
             std::cout << "更新成功，key:" << key << std::endl;
         } else {
@@ -502,7 +503,9 @@ void WDiskCache::set(const void *value, const std::string& key, size_t cost) {
         }
         return;
     }
+    _mutex.lock();
     bool result = _db_save(_db, key.c_str(), value, cost);
+    _mutex.unlock();
     if (result) {
         std::cout << "插入成功，key:" << key << std::endl;
     } else {
@@ -516,8 +519,10 @@ std::pair<const void *, int> WDiskCache::get(const std::string& key) {
         return {NULL, 0};
     }
     const char *k = key.c_str();
+    _mutex.lock();
     auto p = _db_get(_db, k);
     _db_updateAccessTime(_db, k);
+    _mutex.unlock();
     return p;
 }
 
@@ -525,7 +530,9 @@ bool WDiskCache::contain(const std::string& key) {
     if (!_db_open()) {
         return false;
     }
+    _mutex.lock();
     unsigned int result = _db_getCount(_db, key.c_str());
+    _mutex.unlock();
     if (result == -1) {
         std::cout << "查询数量失败，key:" << key << std::endl;
         return false;
@@ -536,14 +543,18 @@ bool WDiskCache::contain(const std::string& key) {
 }
 
 void WDiskCache::update(const std::string& key) {
+    _mutex.lock();
     _db_updateAccessTime(_db, key.c_str());
+    _mutex.unlock();
 }
 
 void WDiskCache::removeObj(const std::string& key) {
     if (!_db_open()) {
         return ;
     }
+    _mutex.lock();
     bool result = _db_delete(_db, key.c_str());
+    _mutex.unlock();
     if (result) {
         std::cout << "删除成功，key:" << key << std::endl;
     } else {
@@ -555,7 +566,9 @@ void WDiskCache::removeObjs(std::vector<std::string> &keys) {
     if (!_db_open()) {
         return ;
     }
+    _mutex.lock();
     bool result = _db_deleteItems(_db, keys);
+    _mutex.unlock();
     if (result) {
         std::cout << "批量删除成功" << std::endl;
     } else {
@@ -564,7 +577,9 @@ void WDiskCache::removeObjs(std::vector<std::string> &keys) {
 }
 
 void WDiskCache::removeAllObj() {
+    _mutex.lock();
     _db_close();
+    _mutex.unlock();
     int result = std::remove(_rootPath);
     if (result == 0) {
         std::cout << "删除数据库成功" << std::endl;
@@ -575,10 +590,14 @@ void WDiskCache::removeAllObj() {
 
 void WDiskCache::trimToFitLimit() {
     if (_countLimit > 0) {
+        _mutex.lock();
         _trim_fit_count(_countLimit);
+        _mutex.unlock();
     }
     if (_costLimit > 0) {
+        _mutex.lock();
         _trim_fit_cost(_costLimit);
+        _mutex.unlock();
     }
 }
 

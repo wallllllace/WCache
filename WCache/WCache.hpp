@@ -135,6 +135,7 @@ private:
     sqlite3 *_db = NULL;
     const size_t _countLimit;
     const size_t _costLimit;
+    std::mutex _mutex;
     
     bool _db_open();
     void _db_close();
