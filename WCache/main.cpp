@@ -10,9 +10,9 @@
 #include <string>
 #include <iostream>
 #include <memory>
-#include "WCache.hpp"
+//#include "WCache.hpp"
 
-using namespace WCache;
+//using namespace WCache;
 
 //void func1(WMemoryCache<int> *cache, const std::string key, std::shared_ptr<int> value) {
 //    std::cout << "func1的key：" << key << " ,func1的value：" << *value << std::endl;

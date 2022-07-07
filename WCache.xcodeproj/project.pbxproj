@@ -7,9 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		EF7EDA862867181000F02CE1 /* CacheTool.mm in Sources */ = {isa = PBXBuildFile; fileRef = EF7EDA842867181000F02CE1 /* CacheTool.mm */; };
+		EF7C3F7728755C0F0031B7FA /* WCache.mm in Sources */ = {isa = PBXBuildFile; fileRef = EF7C3F7628755C0F0031B7FA /* WCache.mm */; };
 		EFB71B1D28669B5B0049FCE4 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EFB71B1C28669B5B0049FCE4 /* main.cpp */; };
-		EFB71B2628669B9D0049FCE4 /* WCache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EFB71B2428669B9D0049FCE4 /* WCache.cpp */; };
 		EFD30BC5286B230F00BBC45C /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = EFD30BC4286B230F00BBC45C /* libsqlite3.tbd */; };
 /* End PBXBuildFile section */
 
@@ -26,12 +25,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		EF7EDA842867181000F02CE1 /* CacheTool.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CacheTool.mm; sourceTree = "<group>"; };
-		EF7EDA852867181000F02CE1 /* CacheTool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CacheTool.h; sourceTree = "<group>"; };
+		EF7C3F7528755C0F0031B7FA /* WCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WCache.h; sourceTree = "<group>"; };
+		EF7C3F7628755C0F0031B7FA /* WCache.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = WCache.mm; sourceTree = "<group>"; };
 		EFB71B1928669B5B0049FCE4 /* WCache */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = WCache; sourceTree = BUILT_PRODUCTS_DIR; };
 		EFB71B1C28669B5B0049FCE4 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		EFB71B2428669B9D0049FCE4 /* WCache.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = WCache.cpp; sourceTree = "<group>"; };
-		EFB71B2528669B9D0049FCE4 /* WCache.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WCache.hpp; sourceTree = "<group>"; };
 		EFD30BC4286B230F00BBC45C /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -67,11 +64,9 @@
 		EFB71B1B28669B5B0049FCE4 /* WCache */ = {
 			isa = PBXGroup;
 			children = (
-				EF7EDA852867181000F02CE1 /* CacheTool.h */,
-				EF7EDA842867181000F02CE1 /* CacheTool.mm */,
 				EFB71B1C28669B5B0049FCE4 /* main.cpp */,
-				EFB71B2428669B9D0049FCE4 /* WCache.cpp */,
-				EFB71B2528669B9D0049FCE4 /* WCache.hpp */,
+				EF7C3F7528755C0F0031B7FA /* WCache.h */,
+				EF7C3F7628755C0F0031B7FA /* WCache.mm */,
 			);
 			path = WCache;
 			sourceTree = "<group>";
@@ -141,9 +136,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EFB71B2628669B9D0049FCE4 /* WCache.cpp in Sources */,
 				EFB71B1D28669B5B0049FCE4 /* main.cpp in Sources */,
-				EF7EDA862867181000F02CE1 /* CacheTool.mm in Sources */,
+				EF7C3F7728755C0F0031B7FA /* WCache.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
