@@ -30,6 +30,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)removeAllObjects ;
 
+- (void)trimBackground ;
+
 #pragma mark - test code
 
 - (void)m_setObject:(nullable id)object forKey:(NSString *)key ;

@@ -171,9 +171,7 @@ private:
 };
 
 std::shared_ptr<CacheNode> WMemoryCache::_get(const char *key) {
-    _mutex.lock();
     auto it = _lru->_map.find(key);
-    _mutex.unlock();
     if (it == _lru->_map.cend()) {
         return nullptr;
     }
@@ -182,11 +180,14 @@ std::shared_ptr<CacheNode> WMemoryCache::_get(const char *key) {
 }
 
 std::pair<const void *, int>WMemoryCache::get(const char *key) {
+    _mutex.lock();
     auto p = _get(key);
     if (p == nullptr) {
+        _mutex.unlock();
         return {NULL, -1};
     }
     _lru->bringNodeToHead(p);
+    _mutex.unlock();
     return {p->_value, p->_length};
 }
 
@@ -211,14 +212,15 @@ void WMemoryCache::set(const void *value, const char *key, size_t cost) {
             costCur = 0;
         }
     }
-    _mutex.unlock();
     if (countCur > countLimit) {
         _trimToFitCount();
     }
     if (costCur > costLimit) {
-        _trimToFitCost();
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            _trimToFitCost();
+        });
     }
-    
+    _mutex.unlock();
 }
 
 bool WMemoryCache::contain(const char *key) {
@@ -232,11 +234,11 @@ bool WMemoryCache::contain(const char *key) {
 }
 
 void WMemoryCache::removeObj(const char *key) {
+    _mutex.lock();
     auto p = _get(key);
     if (p == nullptr) {
         return;
     }
-    _mutex.lock();
     _lru->removeNode(p);
     --countCur;
     costCur -= p->_length;
@@ -251,17 +253,24 @@ void WMemoryCache::removeAllObj() {
     _mutex.unlock();
 }
 
-
 void WMemoryCache::_trimToFitCost() {
     if (costCur <= costLimit) {
         return;
     }
-    while (costCur > costLimit) {
-        _mutex.lock();
-        auto node = _lru->removeTailNode();
-        --countCur;
-        costCur -= node->_length;
-        _mutex.unlock();
+    bool finish = false;
+    while (!finish) {
+        if (_mutex.try_lock()) {
+            if (costCur > costLimit) {
+                auto node = _lru->removeTailNode();
+                --countCur;
+                costCur -= node->_length;
+            } else {
+                finish = YES;
+            }
+            _mutex.unlock();
+        } else {
+            usleep(10 * 1000); //10 ms
+        }
     }
 }
 
@@ -269,15 +278,10 @@ void WMemoryCache::_trimToFitCount() {
     if (countCur <= countLimit) {
         return;
     }
-    while (countCur > countLimit) {
-        _mutex.lock();
-        auto node = _lru->removeTailNode();
-        --countCur;
-        costCur -= node->_length;
-        _mutex.unlock();
-    }
+    auto node = _lru->removeTailNode();
+    --countCur;
+    costCur -= node->_length;
 }
-
 
 static const char * k_db_name = "w_cache.sqlite";
 
@@ -962,6 +966,10 @@ std::vector<std::pair<const char *, int>> WDiskCache::_db_getItemByTimeAsc(unsig
 - (void)removeAllObjects {
     _memorycache->removeAllObj();
     _diskcache->removeAllObj();
+}
+
+- (void)trimBackground {
+    _diskcache->trimToFitLimit();
 }
 
 - (void)dealloc {
