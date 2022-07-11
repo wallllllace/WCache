@@ -6,22 +6,13 @@
 //
 
 #import "WCache.h"
-//#include "WCache.hpp"
-#import <Objc/runtime.h>
-//#include <cstring>
 #include <cstring>
 #include <vector>
 #include <string>
 #include <iostream>
-
 #include <cstdio>
-#include <fstream>
-#include <thread>
-
 #include <stdio.h>
-//#include <string>
 #include <sqlite3.h>
-//#include <iostream>
 #include <unordered_map>
 #include <memory>
 #include <mutex>
@@ -35,8 +26,6 @@ class CacheNode {
 public:
     CacheNode(const void *value, const std::string key, unsigned long long length): _value(value), _key(key), _length(length) {
         _timestamp = (unsigned long long)time(NULL);
-        _last = nullptr;
-        _next = nullptr;
     }
     
     ~CacheNode() {
@@ -54,8 +43,8 @@ public:
     size_t _length;
     const std::string _key;
     unsigned long long _timestamp;
-    std::shared_ptr<CacheNode> _last;
-    std::shared_ptr<CacheNode> _next;
+    std::weak_ptr<CacheNode> _last;
+    std::weak_ptr<CacheNode> _next;
     
 };
 
@@ -99,14 +88,14 @@ void LinkedMap::bringNodeToHead(std::shared_ptr<CacheNode> node) {
         return;
     }
     if (_tail == node) {
-        _tail = node->_last;
-        _tail->_next = nullptr;
+        _tail = node->_last.lock();
+        _tail->_next.reset();
     } else {
-        node->_next->_last = node->_last;
-        node->_last->_next = node->_next;
+        node->_next.lock()->_last = node->_last.lock();
+        node->_last.lock()->_next = node->_next.lock();
     }
     node->_next = _head;
-    node->_last = nullptr;
+    node->_last.reset();
     _head->_last = node;
     _head = node;
 }
@@ -116,17 +105,17 @@ void LinkedMap::removeNode(std::shared_ptr<CacheNode> node) {
         return;
     }
     _map.erase(node->_key);
-    if (node->_next) {
-        node->_next->_last = node->_last;
+    if (node->_next.lock()) {
+        node->_next.lock()->_last = node->_last.lock();
     }
-    if (node->_last) {
-        node->_last->_next = node->_next;
+    if (node->_last.lock()) {
+        node->_last.lock()->_next = node->_next.lock();
     }
     if (_head == node) {
-        _head = node->_next;
+        _head = node->_next.lock();
     }
     if (_tail == node) {
-        _tail = node->_last;
+        _tail = node->_last.lock();
     }
 }
 
@@ -335,7 +324,7 @@ private:
     bool _db_update(const char * key, const void * value, size_t size);
     bool _db_updateAccessTime(const char *key);
     bool _db_delete(const char * key);
-    bool _db_deleteItems(std::vector<std::string> &keys);
+    bool _db_deleteItems(const std::vector<std::string> &keys);
     std::pair<const void *, int>_db_get(const char *key);
     void _db_getItem(const char *key);
     unsigned int _db_getCount(const char *key);
@@ -370,7 +359,6 @@ WDiskCache::WDiskCache(const char *rootPath, const char *cacheName, size_t count
     }
 };
 
-// 增、改
 void WDiskCache::set(const void *value, const char * key, size_t cost) {
     WCacheLock();
     bool result = _db_save(key, value, cost);
@@ -384,7 +372,6 @@ void WDiskCache::set(const void *value, const char * key, size_t cost) {
     }
 }
 
-// 查
 std::pair<const void *, int> WDiskCache::get(const char *key) {
     WCacheLock();
     auto p = _db_get(key);
@@ -701,7 +688,7 @@ bool WDiskCache::_db_delete(const char * key) {
     return true;
 }
 
-bool WDiskCache::_db_deleteItems(std::vector<std::string> &keys) {
+bool WDiskCache::_db_deleteItems(const std::vector<std::string> &keys) {
     if (keys.size() == 0) {
         return false;
     }
