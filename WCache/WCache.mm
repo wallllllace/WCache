@@ -299,6 +299,7 @@ public:
     void removeObjs(std::vector<std::string>& keys);
     void removeAllObj();
     void trimToFitLimit();
+    unsigned int _db_getTotalCount();
 
 private:
     char _rootPath[ROOTPATHLEN];
@@ -328,10 +329,10 @@ private:
     std::pair<const void *, int>_db_get(const char *key);
     void _db_getItem(const char *key);
     unsigned int _db_getCount(const char *key);
-    unsigned int _db_getTotalCount();
+//    unsigned int _db_getTotalCount();
     unsigned int _db_getTotalCost();
     unsigned int _db_getTotal(const char *key);
-    std::vector<std::pair<const char *, int>> _db_getItemByTimeAsc(unsigned int count);
+    std::vector<std::pair<std::string, int>> _db_getItemByTimeAsc(unsigned int count);
 };
 
 WDiskCache::WDiskCache(const char *rootPath, const char *cacheName, size_t count, size_t cost) : _countLimit(count), _costLimit(cost) {
@@ -543,7 +544,7 @@ void WDiskCache::_trim_fit_count(size_t maxCount) {
         auto v = _db_getItemByTimeAsc(perCount);
         for (auto &item : v) {
             if (total > maxCount) {
-                suc = _db_delete(item.first);
+                suc = _db_delete(item.first.c_str());
                 total--;
             } else {
                 break;
@@ -570,7 +571,7 @@ void WDiskCache::_trim_fit_cost(size_t maxCost) {
         auto v = _db_getItemByTimeAsc(perCount);
         for (auto &item : v) {
             if (total > maxCost) {
-                suc = _db_delete(item.first);
+                suc = _db_delete(item.first.c_str());
                 total -= item.second;
             } else {
                 break;
@@ -685,6 +686,7 @@ bool WDiskCache::_db_delete(const char * key) {
         }
         return false;
     }
+    std::cout << " db delete, key :"  << key << std::endl;
     return true;
 }
 
@@ -832,17 +834,18 @@ unsigned int WDiskCache::_db_getTotal(const char *key){
     return sqlite3_column_int(stmt, 0);
 }
 
-std::vector<std::pair<const char *, int>> WDiskCache::_db_getItemByTimeAsc(unsigned int count) {
+std::vector<std::pair<std::string, int>> WDiskCache::_db_getItemByTimeAsc(unsigned int count) {
     const char *sql = "select key, size from w_cache order by last_access_time asc limit ?1;";
     sqlite3_stmt *stmt = _dbPrepareStmt(sql);
     if (!stmt) {
         return {};
     }
-    std::vector<std::pair<const char *, int>> v{};
+    sqlite3_bind_int(stmt, 1, count);
+    std::vector<std::pair<std::string, int>> v{};
     do {
         int result = sqlite3_step(stmt);
         if (result == SQLITE_ROW) {
-            const char *key = (const char *)sqlite3_column_text(stmt, 0);
+            char *key = (char *)sqlite3_column_text(stmt, 0);
             unsigned int size = sqlite3_column_int(stmt, 1);
             v.push_back({key, size});
         } else if (result == SQLITE_DONE) {
@@ -995,8 +998,14 @@ std::vector<std::pair<const char *, int>> WDiskCache::_db_getItemByTimeAsc(unsig
     if (!key || key.length == 0) {
         return ;
     }
-    NSData *value = [NSKeyedArchiver archivedDataWithRootObject:object];
-    _diskcache->set(value.bytes, [key UTF8String], value.length);
+    NSError *err = nil;
+    NSData *value = [NSKeyedArchiver archivedDataWithRootObject:object requiringSecureCoding:YES error:&err];
+    if (!value || err) {
+        return;
+    }
+    void *v = (__bridge_retained void *)value;
+    NSData *d = (__bridge_transfer NSData *)v;
+    _diskcache->set(d.bytes, [key UTF8String], value.length);
 }
 
 - (nullable id)d_objectForKey:(NSString *)key {
@@ -1005,10 +1014,15 @@ std::vector<std::pair<const char *, int>> WDiskCache::_db_getItemByTimeAsc(unsig
     }
     auto p = _diskcache->get([key UTF8String]);
     if (p.second != 0) {
-        NSData *data = [NSData dataWithBytes:p.first length:p.second];
+        NSData *data = [NSData dataWithBytesNoCopy:(void *)p.first length:p.second freeWhenDone:NO];
         id object = [NSKeyedUnarchiver unarchiveObjectWithData:data];
         return object;
     }
     return nil;
 }
+
+- (unsigned)d_getTotal {
+    return _diskcache->_db_getTotalCount();
+}
+
 @end

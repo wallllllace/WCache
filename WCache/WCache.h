@@ -44,6 +44,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable id)d_objectForKey:(NSString *)key;
 
+- (unsigned)d_getTotal;
+
 @end
 
 
