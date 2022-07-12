@@ -686,7 +686,6 @@ bool WDiskCache::_db_delete(const char * key) {
         }
         return false;
     }
-    std::cout << " db delete, key :"  << key << std::endl;
     return true;
 }
 
@@ -1003,9 +1002,7 @@ std::vector<std::pair<std::string, int>> WDiskCache::_db_getItemByTimeAsc(unsign
     if (!value || err) {
         return;
     }
-    void *v = (__bridge_retained void *)value;
-    NSData *d = (__bridge_transfer NSData *)v;
-    _diskcache->set(d.bytes, [key UTF8String], value.length);
+    _diskcache->set(value.bytes, [key UTF8String], value.length);
 }
 
 - (nullable id)d_objectForKey:(NSString *)key {
